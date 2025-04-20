@@ -9,6 +9,16 @@ import orderRouter from "./routes/orderRoute.js";
 
 // app config
 const app = express();
+
+
+// User.find()
+// .then(data => {
+//   console.log("All Users:", data);
+// })
+// .catch(err => {
+//   console.error("Error fetching users:", err);
+// });
+
 const port =process.env.PORT || 4000;
 
 //middlewares
