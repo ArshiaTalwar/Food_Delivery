@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
+import PropTypes from "prop-types";
 import "./FoodItem.css";
-import { assets } from "../../assets/frontend_assets/assets";
+import { assets } from "../../assets/frontend_assets/assets.js";
 import { StoreContext } from "../../context/StoreContext";
 
 const FoodItem = ({ id, name, price, description, image }) => {
@@ -9,7 +10,10 @@ const FoodItem = ({ id, name, price, description, image }) => {
   return (
     <div className="food-item">
       <div className="food-item-img-container">
-        <img src={url+"/images/"+image} alt="" className="food-item-image" />
+      
+      <img src={image} alt={name} className="food-item-image" />
+
+
         {!cartItems[id] ? (
           <img
             className="add"
@@ -36,5 +40,13 @@ const FoodItem = ({ id, name, price, description, image }) => {
     </div>
   );
 };
+FoodItem.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  price: PropTypes.number.isRequired,
+  description: PropTypes.string.isRequired,
+   image: PropTypes.string.isRequired,
+};
+
 
 export default FoodItem;
