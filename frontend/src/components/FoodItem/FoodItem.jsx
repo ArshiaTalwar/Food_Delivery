@@ -1,20 +1,21 @@
-import React, { useContext, useState } from "react";
+import  { useContext} from "react";
 import PropTypes from "prop-types";
 import "./FoodItem.css";
 import { assets } from "../../assets/frontend_assets/assets.js";
 import { StoreContext } from "../../context/StoreContext";
 
 const FoodItem = ({ id, name, price, description, image }) => {
-  const {cartItems,addToCart,removeFromCart,url}=useContext(StoreContext); 
-
+  const {cartItems,addToCart,removeFromCart}=useContext(StoreContext); 
+ const url = "http://localhost:4000"; // or your backend URL
+  console.log("Image prop:", image); 
   return (
     <div className="food-item">
       <div className="food-item-img-container">
       
-      <img src={image} alt={name} className="food-item-image" />
+      {/* <img src={image} alt={name} className="food-item-image" /> */}
+      <img src={`${url}/uploads/${image}`} alt={name} className="food-item-image" />
 
-
-        {!cartItems[id] ? (
+        {!cartItems?.[id] ? (
           <img
             className="add"
             onClick={() => addToCart(id)}

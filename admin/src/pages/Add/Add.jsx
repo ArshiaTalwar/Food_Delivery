@@ -7,8 +7,9 @@ import { useContext } from "react";
 import { StoreContext } from "../../context/StoreContext";
 import { useEffect } from "react";
 import {useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 
-const Add = ({url}) => {
+const Add = ({ url }) => {
   const navigate=useNavigate();
   const {token,admin} = useContext(StoreContext);
   const [image, setImage] = useState(false);
@@ -133,5 +134,9 @@ const Add = ({url}) => {
     </div>
   );
 };
+Add.propTypes = {
+  url: PropTypes.string.isRequired,
+};
 
 export default Add;
+

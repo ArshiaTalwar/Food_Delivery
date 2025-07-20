@@ -6,7 +6,8 @@ import axios from "axios";
 import { StoreContext } from "../../context/StoreContext";
 import {useNavigate } from "react-router-dom";
 
-const Login = ({ url }) => {
+const Login = () => {
+  const url = "http://localhost:4000";
   const navigate=useNavigate();
   const {admin,setAdmin,token, setToken } = useContext(StoreContext);
   const [data, setData] = useState({
@@ -40,7 +41,7 @@ const Login = ({ url }) => {
     if(admin && token){
        navigate("/add");
     }
-  },[])
+  },[admin, token, navigate])
   return (
     <div className="login-popup">
       <form onSubmit={onLogin} className="login-popup-container">
