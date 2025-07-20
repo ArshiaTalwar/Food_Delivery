@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import  { useContext } from "react";
 import "./FoodDisplay.css";
 import { StoreContext } from "../../context/StoreContext";
 import FoodItem from "../FoodItem/FoodItem";
@@ -12,7 +12,11 @@ const FoodDisplay = ({ category }) => {
       <h2>Top dishes near you</h2>
       <div className="food-display-list">
       {food_list
-  .filter(item => category === "All" || category === item.category)
+      .filter(
+  item =>
+    category?.toLowerCase() === "all" ||
+    category?.toLowerCase() === item.category?.toLowerCase()
+)
   .map((item, index) => (
     <FoodItem
       key={index}

@@ -15,28 +15,33 @@ const storage= multer.diskStorage({
 })
 
 const upload= multer({storage:storage})
-foodRouter.post("/seed", async (req, res) => {
-    await FoodModel.deleteMany({});
-    await FoodModel.insertMany([
-      {
-        name: "Burger",
-        description: "Tasty beef burger",
-        price: 10,
-        image: "burger.png", // Put a matching image in uploads
-        category: "Sandwich",
-      },
-      {
-        name: "Pasta",
-        description: "White sauce pasta",
-        price: 12,
-        image: "pasta.png",
-        category: "Pasta",
-      },
-    ]);
-    res.send({ success: true });
-  });
-foodRouter.post("/add",upload.single("image"),authMiddleware,addFood);
+// foodRouter.post("/seed", async (req, res) => {
+//     await FoodModel.deleteMany({});
+//     await FoodModel.insertMany([
+//       {
+//          name: "Lasagna Rolls",
+//                 image: food_5,
+//                 price: 14,
+//                 description: "Food provides essential nutrients for overall health and well-being",
+//                 category: "Rolls"
+//       },
+//       {
+//         name: "Pasta",
+//         description: "White sauce pasta",
+//         price: 12,
+//         image: "pasta.png",
+//         category: "Pasta",
+//       },
+//        name: "Chicken Rolls",
+//               image: food_7,
+//               price: 20,
+//               description: "Food provides essential nutrients for overall health and well-being",
+//               category: "Rolls"
+//     ]);
+//     res.send({ success: true });
+//   });
+foodRouter.post("/add",upload.single("image"),addFood);
 foodRouter.get("/list",listFood);
-foodRouter.post("/remove",authMiddleware,removeFood);
+foodRouter.post("/remove",removeFood);
 
 export default foodRouter;
