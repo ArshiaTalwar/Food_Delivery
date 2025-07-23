@@ -10,11 +10,12 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Verify from "./pages/Verify/Verify";
 import MyOrders from "./pages/MyOrders/MyOrders";
+import { SocketProvider } from "./context/SocketContext";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
   return (
-    <>
+    <SocketProvider>
       {showLogin ? <LoginPopup setShowLogin={setShowLogin} /> : <></>}
       <div className="app">
         <ToastContainer />
@@ -28,7 +29,7 @@ const App = () => {
         </Routes>
       </div>
       <Footer />
-    </>
+    </SocketProvider>
   );
 };
 
