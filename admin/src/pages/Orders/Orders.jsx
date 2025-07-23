@@ -7,12 +7,17 @@ import { useEffect } from "react";
 import { assets } from "../../assets/assets";
 import { useContext } from "react";
 import { StoreContext } from "../../context/StoreContext";
+import { useSocket } from "../../context/SocketContext";
 import { useNavigate } from "react-router-dom";
 
 const Orders = ({ url }) => {
   const navigate = useNavigate();
   const { token, admin } = useContext(StoreContext);
+  const { socket, newOrdersCount, resetNewOrdersCount } = useSocket();
   const [orders, setOrders] = useState([]);
+  const [deliveryPersonName, setDeliveryPersonName] = useState('');
+  const [deliveryPersonPhone, setDeliveryPersonPhone] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   const fetchAllOrder = async () => {
     const response = await axios.get(url + "/api/order/list", {
@@ -24,17 +29,30 @@ const Orders = ({ url }) => {
   };
 
   const statusHandler = async (event, orderId) => {
+    const newStatus = event.target.value;
+    const requestData = {
+      orderId,
+      status: newStatus,
+    };
+
+    // Add delivery person details if status is "Out for delivery"
+    if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
+      if (deliveryPersonName) requestData.deliveryPersonName = deliveryPersonName;
+      if (deliveryPersonPhone) requestData.deliveryPersonPhone = deliveryPersonPhone;
+    }
+
     const response = await axios.post(
       url + "/api/order/status",
-      {
-        orderId,
-        status: event.target.value,
-      },
+      requestData,
       { headers: { token } }
     );
     if (response.data.success) {
       toast.success(response.data.message);
       await fetchAllOrder();
+      // Reset delivery person fields
+      setDeliveryPersonName('');
+      setDeliveryPersonPhone('');
+      setSelectedOrderId(null);
     } else {
       toast.error(response.data.message);
     }
@@ -45,11 +63,40 @@ const Orders = ({ url }) => {
       navigate("/");
     }
     fetchAllOrder();
+    resetNewOrdersCount(); // Reset notification count when viewing orders
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('newOrder', (data) => {
+        // Refresh orders list when new order arrives
+        fetchAllOrder();
+      });
+
+      return () => {
+        socket.off('newOrder');
+      };
+    }
+  }, [socket]);
+
+  const handleDeliveryAssignment = (orderId) => {
+    setSelectedOrderId(orderId);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
 
   return (
     <div className="order add">
-      <h3>Order Page</h3>
+      <div className="order-header">
+        <h3>Order Management</h3>
+        {newOrdersCount > 0 && (
+          <div className="notification-badge">
+            {newOrdersCount} new order{newOrdersCount > 1 ? 's' : ''}
+          </div>
+        )}
+      </div>
       <div className="order-list">
         {orders.map((order, index) => (
           <div key={index} className="order-item">
@@ -80,17 +127,62 @@ const Orders = ({ url }) => {
                 </p>
               </div>
               <p className="order-item-phone">{order.address.phone}</p>
+              <p className="order-date">Ordered: {formatDate(order.date)}</p>
+              {order.estimatedDeliveryTime && (
+                <p className="estimated-delivery">
+                  ETA: {formatDate(order.estimatedDeliveryTime)}
+                </p>
+              )}
+              {order.deliveryPersonName && (
+                <p className="delivery-person">
+                  Delivery: {order.deliveryPersonName} ({order.deliveryPersonPhone})
+                </p>
+              )}
             </div>
             <p>Items: {order.items.length}</p>
             <p>${order.amount}</p>
-            <select
-              onChange={(event) => statusHandler(event, order._id)}
-              value={order.status}
-            >
-              <option value="Food Processing">Food Processing</option>
-              <option value="Out for delivery">Out for delivery</option>
-              <option value="Delivered">Delivered</option>
-            </select>
+            <div className="order-controls">
+              <select
+                onChange={(event) => statusHandler(event, order._id)}
+                value={order.status}
+                className="status-select"
+              >
+                <option value="Food Processing">Food Processing</option>
+                <option value="Order Confirmed">Order Confirmed</option>
+                <option value="Preparing">Preparing</option>
+                <option value="Ready for Pickup">Ready for Pickup</option>
+                <option value="Out for delivery">Out for delivery</option>
+                <option value="Delivered">Delivered</option>
+              </select>
+              
+              {order.status !== "Delivered" && order.status !== "Out for delivery" && (
+                <button 
+                  onClick={() => handleDeliveryAssignment(order._id)}
+                  className="assign-delivery-btn"
+                >
+                  Assign Delivery
+                </button>
+              )}
+              
+              {selectedOrderId === order._id && (
+                <div className="delivery-form">
+                  <input
+                    type="text"
+                    placeholder="Delivery Person Name"
+                    value={deliveryPersonName}
+                    onChange={(e) => setDeliveryPersonName(e.target.value)}
+                    className="delivery-input"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Phone Number"
+                    value={deliveryPersonPhone}
+                    onChange={(e) => setDeliveryPersonPhone(e.target.value)}
+                    className="delivery-input"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>

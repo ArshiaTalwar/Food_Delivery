@@ -27,13 +27,23 @@
     font-weight: 500;
     color: #454545;
 }
-.my-orders-order button{
+.my-orders-order button,
+.track-btn {
     border: none;
-    padding: 12px 0px;
-    border-radius: 4px;
-    background-color: #ffe1e1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     cursor: pointer;
-    color: #454545;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.my-orders-order button:hover,
+.track-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 @media (max-width:900px) {
     .my-orders-order{
