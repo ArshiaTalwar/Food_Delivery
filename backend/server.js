@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/userRoute.js";
@@ -9,6 +11,14 @@ import orderRouter from "./routes/orderRoute.js";
 
 // app config
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
 
 
 // User.find()
@@ -39,6 +49,30 @@ app.get("/", (req, res) => {
   res.send("API Working");
 });
 
-app.listen(port, () => {
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  // Join a room based on user ID for personalized notifications
+  socket.on('join', (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined room`);
+  });
+  
+  // Join admin room for admin notifications
+  socket.on('joinAdmin', () => {
+    socket.join('admin');
+    console.log('Admin joined admin room');
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Make io accessible in controllers
+app.set('io', io);
+
+server.listen(port, () => {
   console.log(`Server Started on port: ${port}`);
 });
