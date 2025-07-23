@@ -130,13 +130,23 @@ const updateStatus = async (req, res) => {
       // Add delivery person details if provided
       if (req.body.deliveryPersonName) {
         updateData.deliveryPersonName = req.body.deliveryPersonName;
+        console.log("Adding delivery person name:", req.body.deliveryPersonName);
       }
       if (req.body.deliveryPersonPhone) {
         updateData.deliveryPersonPhone = req.body.deliveryPersonPhone;
+        console.log("Adding delivery person phone:", req.body.deliveryPersonPhone);
       }
 
+      console.log("Final update data being sent to MongoDB:", updateData);
+
       // Update the order status and delivery person info
-      await orderModel.findByIdAndUpdate(req.body.orderId, updateData);
+      const mongoUpdateResult = await orderModel.findByIdAndUpdate(req.body.orderId, updateData, { new: true });
+      console.log("MongoDB update result:", {
+        id: mongoUpdateResult._id,
+        status: mongoUpdateResult.status,
+        deliveryPersonName: mongoUpdateResult.deliveryPersonName,
+        deliveryPersonPhone: mongoUpdateResult.deliveryPersonPhone
+      });
 
       // Update tracking steps based on status
       const updatedOrder = await updateTrackingSteps(req.body.orderId, req.body.status, req.body.deliveryPersonName, req.body.deliveryPersonPhone);

@@ -108,11 +108,15 @@ const Orders = ({ url }) => {
       deliveryPersonPhone,
     };
 
+    console.log("Sending delivery assignment data:", requestData);
+
     const response = await axios.post(
       url + "/api/order/status",
       requestData,
       { headers: { token } }
     );
+    
+    console.log("Response from server:", response.data);
     
     if (response.data.success) {
       toast.success("Delivery person assigned and status updated successfully!");
