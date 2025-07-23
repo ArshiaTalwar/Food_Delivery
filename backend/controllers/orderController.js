@@ -8,14 +8,29 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const placeOrder = async (req, res) => {
   const frontend_url = "http://localhost:3000";
   try {
+    const estimatedTime = new Date();
+    estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
+    
     const newOrder = new orderModel({
       userId: req.body.userId,
       items: req.body.items,
       amount: req.body.amount,
       address: req.body.address,
+      estimatedDeliveryTime: estimatedTime,
     });
     await newOrder.save();
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
+    
+    // Emit new order event to admin
+    const io = req.app.get('io');
+    io.to('admin').emit('newOrder', {
+      orderId: newOrder._id,
+      userId: req.body.userId,
+      items: req.body.items,
+      amount: req.body.amount,
+      address: req.body.address,
+      timestamp: new Date()
+    });
 
     const line_items = req.body.items.map((item) => ({
       price_data: {
@@ -101,9 +116,31 @@ const updateStatus = async (req, res) => {
   try {
     let userData = await userModel.findById(req.body.userId);
     if (userData && userData.role === "admin") {
+      const order = await orderModel.findById(req.body.orderId);
+      if (!order) {
+        return res.json({ success: false, message: "Order not found" });
+      }
+
+      // Update the order status
       await orderModel.findByIdAndUpdate(req.body.orderId, {
         status: req.body.status,
       });
+
+      // Update tracking steps based on status
+      const updatedOrder = await updateTrackingSteps(req.body.orderId, req.body.status, req.body.deliveryPersonName, req.body.deliveryPersonPhone);
+      
+      // Emit real-time update to the user
+      const io = req.app.get('io');
+      io.to(order.userId).emit('orderStatusUpdate', {
+        orderId: req.body.orderId,
+        status: req.body.status,
+        trackingSteps: updatedOrder.trackingSteps,
+        estimatedDeliveryTime: updatedOrder.estimatedDeliveryTime,
+        deliveryPersonName: updatedOrder.deliveryPersonName,
+        deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
+        timestamp: new Date()
+      });
+
       res.json({ success: true, message: "Status Updated Successfully" });
     }else{
       res.json({ success: false, message: "You are not an admin" });
@@ -114,4 +151,61 @@ const updateStatus = async (req, res) => {
   }
 };
 
-export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus };
+// Helper function to update tracking steps
+const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, deliveryPersonPhone = null) => {
+  const order = await orderModel.findById(orderId);
+  const trackingSteps = [...order.trackingSteps];
+  
+  const statusMapping = {
+    "Order Confirmed": 1,
+    "Food Processing": 2,
+    "Preparing": 2,
+    "Ready for Pickup": 3,
+    "Out for Delivery": 4,
+    "Delivered": 5
+  };
+  
+  const stepIndex = statusMapping[status];
+  if (stepIndex !== undefined) {
+    // Mark current and previous steps as completed
+    for (let i = 0; i <= stepIndex; i++) {
+      if (trackingSteps[i] && !trackingSteps[i].completed) {
+        trackingSteps[i].completed = true;
+        trackingSteps[i].timestamp = new Date();
+      }
+    }
+  }
+  
+  const updateData = { 
+    trackingSteps,
+    ...(deliveryPersonName && { deliveryPersonName }),
+    ...(deliveryPersonPhone && { deliveryPersonPhone })
+  };
+  
+  return await orderModel.findByIdAndUpdate(orderId, updateData, { new: true });
+};
+
+// Get single order with tracking details
+const getOrderTracking = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await orderModel.findById(orderId);
+    
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
+    }
+    
+    // Check if user owns this order or is admin
+    const userData = await userModel.findById(req.body.userId);
+    if (order.userId !== req.body.userId && userData.role !== "admin") {
+      return res.json({ success: false, message: "Unauthorized access" });
+    }
+    
+    res.json({ success: true, data: order });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error" });
+  }
+};
+
+export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, getOrderTracking };
