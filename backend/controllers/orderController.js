@@ -114,6 +114,7 @@ const listOrders = async (req, res) => {
 // api for updating status
 const updateStatus = async (req, res) => {
   try {
+    console.log("Update status request body:", req.body); // Debug log
     let userData = await userModel.findById(req.body.userId);
     if (userData && userData.role === "admin") {
       const order = await orderModel.findById(req.body.orderId);
@@ -121,13 +122,30 @@ const updateStatus = async (req, res) => {
         return res.json({ success: false, message: "Order not found" });
       }
 
-      // Update the order status
-      await orderModel.findByIdAndUpdate(req.body.orderId, {
+      // Prepare update data
+      const updateData = {
         status: req.body.status,
-      });
+      };
+
+      // Add delivery person details if provided
+      if (req.body.deliveryPersonName) {
+        updateData.deliveryPersonName = req.body.deliveryPersonName;
+      }
+      if (req.body.deliveryPersonPhone) {
+        updateData.deliveryPersonPhone = req.body.deliveryPersonPhone;
+      }
+
+      // Update the order status and delivery person info
+      await orderModel.findByIdAndUpdate(req.body.orderId, updateData);
 
       // Update tracking steps based on status
       const updatedOrder = await updateTrackingSteps(req.body.orderId, req.body.status, req.body.deliveryPersonName, req.body.deliveryPersonPhone);
+      
+      console.log("Updated order data:", {
+        deliveryPersonName: updatedOrder.deliveryPersonName,
+        deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
+        status: updatedOrder.status
+      }); // Debug log
       
       // Emit real-time update to the user
       const io = req.app.get('io');

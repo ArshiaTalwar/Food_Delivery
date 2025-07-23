@@ -157,9 +157,11 @@ deliveryPersonPhone: String
    - See real-time updates on user side
 
 4. **Test Delivery Assignment:**
-   - Click "Assign Delivery" button
-   - Enter delivery person details
-   - Update status to "Out for delivery"
+   - Click "Assign Delivery" button on an order
+   - Enter delivery person name and phone number
+   - Click "Assign & Set Out for Delivery" button
+   - Check that the delivery person info appears in the order
+   - Verify real-time updates on the user side
 
 ## 🎨 Customization Options
 
