@@ -97,4 +97,30 @@ orderRouter.post("/test-delivery", authMiddleware, async (req, res) => {
   }
 });
 
+// Test Stripe connection
+orderRouter.get("/test-stripe", async (req, res) => {
+  try {
+    const Stripe = await import('stripe');
+    const stripe = new Stripe.default(process.env.STRIPE_SECRET_KEY);
+    
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 100, // $1.00 for testing
+      currency: 'usd',
+      payment_method_types: ['card'],
+    });
+    res.json({ 
+      success: true, 
+      message: "Stripe connection working!", 
+      clientSecret: paymentIntent.client_secret 
+    });
+  } catch (error) {
+    console.error("Stripe test failed:", error);
+    res.json({ 
+      success: false, 
+      message: "Stripe connection failed", 
+      error: error.message 
+    });
+  }
+});
+
 export default orderRouter;

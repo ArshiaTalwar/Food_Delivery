@@ -65,6 +65,13 @@ const placeOrder = async (req, res) => {
       trackingSteps: trackingSteps, // Use custom tracking steps with correct timestamp
     });
     await newOrder.save();
+    
+    // Force update the "Order Placed" timestamp after save
+    await orderModel.findByIdAndUpdate(newOrder._id, {
+      'trackingSteps.0.timestamp': new Date(), // Update first step with current time
+    });
+    
+    console.log("🔄 Updated Order Placed timestamp to current time");
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
     
     // Emit new order event to admin
