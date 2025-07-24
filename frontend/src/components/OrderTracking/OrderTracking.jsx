@@ -30,24 +30,9 @@ const OrderTracking = ({ orderId, onClose }) => {
             timestamp: step.timestamp
           })));
           
-          setOrderData(prev => {
-            const newData = {
-              ...prev,
-              status: data.status,
-              trackingSteps: data.trackingSteps,
-              estimatedDeliveryTime: data.estimatedDeliveryTime,
-              deliveryPersonName: data.deliveryPersonName,
-              deliveryPersonPhone: data.deliveryPersonPhone
-            };
-            console.log('🔄 Updated order data:', newData);
-            return newData;
-          });
-          
-          // Force a re-fetch to ensure we have the latest data
-          setTimeout(() => {
-            console.log('🔄 Fetching fresh order data after socket update');
-            fetchOrderDetails();
-          }, 1000);
+          // SIMPLE APPROACH: Just refresh the data from database
+          console.log('📨 Socket update received, refreshing order data...');
+          fetchOrderDetails();
         } else {
           console.log('❌ OrderId does not match, ignoring update');
         }
@@ -118,7 +103,12 @@ const OrderTracking = ({ orderId, onClose }) => {
       <div className="order-tracking-content">
         <div className="tracking-header">
           <h2>Order Tracking</h2>
-          <button onClick={onClose} className="close-btn">×</button>
+          <div>
+            <button onClick={fetchOrderDetails} className="refresh-btn" style={{marginRight: '10px'}}>
+              🔄 Refresh
+            </button>
+            <button onClick={onClose} className="close-btn">×</button>
+          </div>
         </div>
 
         <div className="order-summary">

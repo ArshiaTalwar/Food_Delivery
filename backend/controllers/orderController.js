@@ -330,6 +330,13 @@ const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, d
           }
         }
       }
+      
+      // FORCE UPDATE: Directly update the database with the correct tracking steps
+      console.log("🔧 FORCE UPDATE: Directly updating tracking steps in database");
+      await orderModel.findByIdAndUpdate(orderId, {
+        trackingSteps: trackingSteps
+      });
+      console.log("✅ Force update completed");
     }
   } else {
     console.log("❌ No mapping found for status:", status);
