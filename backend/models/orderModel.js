@@ -10,8 +10,6 @@ const orderSchema = new mongoose.Schema({
   payment: { type: Boolean, default: false },
   trackingSteps: {
     type: Array,
-
-    default: []
     default: [
       {
         step: "Order Placed",
@@ -50,7 +48,6 @@ const orderSchema = new mongoose.Schema({
         description: "Order delivered successfully"
       }
     ]
-
   },
   estimatedDeliveryTime: { type: Date, default: null },
   deliveryPersonName: { type: String, default: null },
