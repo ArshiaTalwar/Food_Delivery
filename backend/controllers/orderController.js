@@ -56,10 +56,6 @@ const placeOrder = async (req, res) => {
       }
     ];
 
-     estimatedTime = new Date();
-    estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
-
-    
     const newOrder = new orderModel({
       userId: req.body.userId,
       items: req.body.items,
