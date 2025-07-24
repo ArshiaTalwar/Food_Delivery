@@ -9,7 +9,7 @@ const placeOrder = async (req, res) => {
   const frontend_url = "http://localhost:3000";
   try {
     const estimatedTime = new Date();
-    estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
+    estimatedTime.setMinutes(estimatedTime.getMinutes() + 45); // 45 minutes estimated delivery
     
     const newOrder = new orderModel({
       userId: req.body.userId,
