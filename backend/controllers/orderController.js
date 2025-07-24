@@ -8,8 +8,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const placeOrder = async (req, res) => {
   const frontend_url = "http://localhost:3000";
   try {
+    const orderTime = new Date();
+    console.log("🕒 Order placed at server time:", orderTime.toLocaleString());
+    
     const estimatedTime = new Date();
-    estimatedTime.setMinutes(estimatedTime.getMinutes() + 45); // 45 minutes estimated delivery
+    estimatedTime.setMinutes(estimatedTime.getMinutes() + 25); // 25 minutes estimated delivery
+    console.log("🚚 ETA set to:", estimatedTime.toLocaleString());
     
     const newOrder = new orderModel({
       userId: req.body.userId,
