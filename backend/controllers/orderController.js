@@ -296,11 +296,12 @@ const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, d
   })));
   
   const statusMapping = {
+    "Food Processing": 2,  // Maps to "Preparing" step
     "Order Confirmed": 1,
-    "Food Processing": 2,
     "Preparing": 2,
     "Ready for Pickup": 3,
-    "Out for Delivery": 4,
+    "Out for delivery": 4,  // Lowercase 'd' from admin panel
+    "Out for Delivery": 4,  // Uppercase 'D' from tracking steps
     "Delivered": 5
   };
   
@@ -319,7 +320,7 @@ const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, d
     }
     
     // Special handling for "Out for Delivery" - ensure all previous steps are completed
-    if (status === "Out for Delivery") {
+    if (status === "Out for Delivery" || status === "Out for delivery") {
       console.log("🚚 Special handling for Out for Delivery - ensuring all previous steps are completed");
       for (let i = 0; i <= 4; i++) { // Complete steps 0-4 (including "Out for Delivery")
         if (trackingSteps[i]) {
