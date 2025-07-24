@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
       {
         step: "Order Placed",
         completed: true,
-        timestamp: Date.now(),
+        timestamp: new Date(),
         description: "Your order has been successfully placed"
       },
       {
