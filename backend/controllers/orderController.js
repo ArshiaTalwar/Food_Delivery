@@ -250,7 +250,7 @@ const updateStatus = async (req, res) => {
       
       // Emit real-time update to the user
       const io = req.app.get('io');
-      io.to(order.userId).emit('orderStatusUpdate', {
+      const socketData = {
         orderId: req.body.orderId,
         status: req.body.status,
         trackingSteps: updatedOrder.trackingSteps,
@@ -258,7 +258,16 @@ const updateStatus = async (req, res) => {
         deliveryPersonName: updatedOrder.deliveryPersonName,
         deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
         timestamp: new Date()
-      });
+      };
+      
+      console.log("📡 Emitting orderStatusUpdate to user:", order.userId);
+      console.log("📋 Socket data tracking steps:", socketData.trackingSteps.map(step => ({
+        step: step.step,
+        completed: step.completed,
+        timestamp: step.timestamp
+      })));
+      
+      io.to(order.userId).emit('orderStatusUpdate', socketData);
 
 
       res.json({ success: true, message: "Status Updated Successfully" });
@@ -276,6 +285,13 @@ const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, d
   const order = await orderModel.findById(orderId);
   const trackingSteps = [...order.trackingSteps];
   
+  console.log("🔄 Updating tracking steps for status:", status);
+  console.log("📋 Current tracking steps:", trackingSteps.map(step => ({
+    step: step.step,
+    completed: step.completed,
+    timestamp: step.timestamp
+  })));
+  
   const statusMapping = {
     "Order Confirmed": 1,
     "Food Processing": 2,
@@ -286,15 +302,40 @@ const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, d
   };
   
   const stepIndex = statusMapping[status];
+  console.log("🎯 Status mapping result - Status:", status, "-> Index:", stepIndex);
+  
   if (stepIndex !== undefined) {
+    console.log("✅ Marking steps 0 to", stepIndex, "as completed");
     // Mark current and previous steps as completed
     for (let i = 0; i <= stepIndex; i++) {
       if (trackingSteps[i] && !trackingSteps[i].completed) {
+        console.log("🔄 Completing step", i, ":", trackingSteps[i].step);
         trackingSteps[i].completed = true;
         trackingSteps[i].timestamp = new Date();
       }
     }
+    
+    // Special handling for "Out for Delivery" - ensure all previous steps are completed
+    if (status === "Out for Delivery") {
+      console.log("🚚 Special handling for Out for Delivery - ensuring all previous steps are completed");
+      for (let i = 0; i <= 4; i++) { // Complete steps 0-4 (including "Out for Delivery")
+        if (trackingSteps[i]) {
+          trackingSteps[i].completed = true;
+          if (!trackingSteps[i].timestamp) {
+            trackingSteps[i].timestamp = new Date();
+          }
+        }
+      }
+    }
+  } else {
+    console.log("❌ No mapping found for status:", status);
   }
+  
+  console.log("📋 Final tracking steps after update:", trackingSteps.map(step => ({
+    step: step.step,
+    completed: step.completed,
+    timestamp: step.timestamp
+  })));
   
   const updateData = { 
     trackingSteps,
@@ -302,7 +343,9 @@ const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, d
     ...(deliveryPersonPhone && { deliveryPersonPhone })
   };
   
-  return await orderModel.findByIdAndUpdate(orderId, updateData, { new: true });
+  const updatedOrder = await orderModel.findByIdAndUpdate(orderId, updateData, { new: true });
+  console.log("✅ Order tracking steps updated in database");
+  return updatedOrder;
 };
 
 // Get single order with tracking details
