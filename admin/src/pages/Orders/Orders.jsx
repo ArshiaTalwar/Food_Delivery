@@ -29,56 +29,45 @@ const Orders = ({ url }) => {
   };
 
   const statusHandler = async (event, orderId) => {
-    const newStatus = event.target.value;
+  const newStatus = event.target.value;
 
+  if (newStatus === "Out for delivery" && selectedOrderId !== orderId) {
+    setSelectedOrderId(orderId);
+    toast.info("Please assign a delivery person first");
+    return;
+  }
 
-    // If changing to "Out for delivery" and no delivery person assigned, prompt for assignment
-    if (newStatus === "Out for delivery" && selectedOrderId !== orderId) {
-      setSelectedOrderId(orderId);
-      toast.info("Please assign a delivery person first");
+  const requestData = {
+    orderId,
+    status: newStatus,
+  };
+
+  if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
+    if (!deliveryPersonName || !deliveryPersonPhone) {
+      toast.error("Please enter delivery person name and phone number");
       return;
     }
+    requestData.deliveryPersonName = deliveryPersonName;
+    requestData.deliveryPersonPhone = deliveryPersonPhone;
+  }
 
+  const response = await axios.post(
+    url + "/api/order/status",
+    requestData,
+    { headers: { token } }
+  );
 
+  if (response.data.success) {
+    toast.success(response.data.message);
+    await fetchAllOrder();
+    setDeliveryPersonName('');
+    setDeliveryPersonPhone('');
+    setSelectedOrderId(null);
+  } else {
+    toast.error(response.data.message);
+  }
+};
 
-    const requestData = {
-      orderId,
-      status: newStatus,
-    };
-
-
-    // Add delivery person details if status is "Out for delivery" and delivery person is assigned
-    if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
-      if (!deliveryPersonName || !deliveryPersonPhone) {
-        toast.error("Please enter delivery person name and phone number");
-        return;
-      }
-      requestData.deliveryPersonName = deliveryPersonName;
-      requestData.deliveryPersonPhone = deliveryPersonPhone;
-
-    // Add delivery person details if status is "Out for delivery"
-    if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
-      if (deliveryPersonName) requestData.deliveryPersonName = deliveryPersonName;
-      if (deliveryPersonPhone) requestData.deliveryPersonPhone = deliveryPersonPhone;
-
-    }
-
-    const response = await axios.post(
-      url + "/api/order/status",
-      requestData,
-      { headers: { token } }
-    );
-    if (response.data.success) {
-      toast.success(response.data.message);
-      await fetchAllOrder();
-      // Reset delivery person fields
-      setDeliveryPersonName('');
-      setDeliveryPersonPhone('');
-      setSelectedOrderId(null);
-    } else {
-      toast.error(response.data.message);
-    }
-  };
   useEffect(() => {
     if (!admin && !token) {
       toast.error("Please Login First");
@@ -262,6 +251,5 @@ const Orders = ({ url }) => {
       </div>
     </div>
   );
-};
-
+}
 export default Orders;
