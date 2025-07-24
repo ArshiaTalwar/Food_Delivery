@@ -6,10 +6,12 @@ const orderSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   address: { type: Object, required: true },
   status: { type: String, default: "Food Processing" },
-  date: { type: Date, default: Date.now() },
+  date: { type: Date, default: Date.now },
   payment: { type: Boolean, default: false },
   trackingSteps: {
     type: Array,
+
+    default: []
     default: [
       {
         step: "Order Placed",
@@ -48,6 +50,7 @@ const orderSchema = new mongoose.Schema({
         description: "Order delivered successfully"
       }
     ]
+
   },
   estimatedDeliveryTime: { type: Date, default: null },
   deliveryPersonName: { type: String, default: null },
