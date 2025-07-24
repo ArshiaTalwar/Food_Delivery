@@ -16,16 +16,25 @@ const OrderTracking = ({ orderId, onClose }) => {
 
   useEffect(() => {
     if (socket) {
+      console.log('📡 Setting up orderStatusUpdate listener for order:', orderId);
+      
       socket.on('orderStatusUpdate', (data) => {
+        console.log('📨 Received orderStatusUpdate:', data);
+        console.log('🎯 Current orderId:', orderId, 'Received orderId:', data.orderId);
+        
         if (data.orderId === orderId) {
-          setOrderData(prev => ({
-            ...prev,
-            status: data.status,
-            trackingSteps: data.trackingSteps,
-            estimatedDeliveryTime: data.estimatedDeliveryTime,
-            deliveryPersonName: data.deliveryPersonName,
-            deliveryPersonPhone: data.deliveryPersonPhone
-          }));
+          console.log('✅ OrderId matches, updating order data');
+          console.log('📋 Received tracking steps:', data.trackingSteps.map(step => ({
+            step: step.step,
+            completed: step.completed,
+            timestamp: step.timestamp
+          })));
+          
+          // SIMPLE APPROACH: Just refresh the data from database
+          console.log('📨 Socket update received, refreshing order data...');
+          fetchOrderDetails();
+        } else {
+          console.log('❌ OrderId does not match, ignoring update');
         }
       });
 
@@ -94,7 +103,12 @@ const OrderTracking = ({ orderId, onClose }) => {
       <div className="order-tracking-content">
         <div className="tracking-header">
           <h2>Order Tracking</h2>
-          <button onClick={onClose} className="close-btn">×</button>
+          <div>
+            <button onClick={fetchOrderDetails} className="refresh-btn" style={{marginRight: '10px'}}>
+              🔄 Refresh
+            </button>
+            <button onClick={onClose} className="close-btn">×</button>
+          </div>
         </div>
 
         <div className="order-summary">

@@ -3,7 +3,7 @@ import UserModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 
 const password = "admin123"; // Set your admin password here
-const mongoUrl = "mongodb+srv://Arshia:Zwiggy@cluster0.aiemvo9.mongodb.net/food-del"; // Replace with your connection string
+const mongoUrl = "mongodb+srv://Arshia:Zwiggy@cluster0.aiemvo9.mongodb.net/zwiggy"; // Replace with your connection string
 
 async function createAdmin() {
   await mongoose.connect(mongoUrl);

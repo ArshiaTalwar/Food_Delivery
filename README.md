@@ -1,6 +1,6 @@
-Food Ordering Website
+# Zwiggy - Food Delivery Platform
 
-This repository hosts the source code  a dynamic food ordering website built with the MERN Stack. It offers a user-friendly platform for seamless online food ordering.
+This repository hosts the source code for Zwiggy, a dynamic food delivery platform built with the MERN Stack. It offers a user-friendly platform for seamless online food ordering and delivery.
 
 
 ## Features
