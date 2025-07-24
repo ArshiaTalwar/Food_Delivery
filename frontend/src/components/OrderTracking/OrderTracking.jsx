@@ -16,16 +16,40 @@ const OrderTracking = ({ orderId, onClose }) => {
 
   useEffect(() => {
     if (socket) {
+      console.log('📡 Setting up orderStatusUpdate listener for order:', orderId);
+      
       socket.on('orderStatusUpdate', (data) => {
+        console.log('📨 Received orderStatusUpdate:', data);
+        console.log('🎯 Current orderId:', orderId, 'Received orderId:', data.orderId);
+        
         if (data.orderId === orderId) {
-          setOrderData(prev => ({
-            ...prev,
-            status: data.status,
-            trackingSteps: data.trackingSteps,
-            estimatedDeliveryTime: data.estimatedDeliveryTime,
-            deliveryPersonName: data.deliveryPersonName,
-            deliveryPersonPhone: data.deliveryPersonPhone
-          }));
+          console.log('✅ OrderId matches, updating order data');
+          console.log('📋 Received tracking steps:', data.trackingSteps.map(step => ({
+            step: step.step,
+            completed: step.completed,
+            timestamp: step.timestamp
+          })));
+          
+          setOrderData(prev => {
+            const newData = {
+              ...prev,
+              status: data.status,
+              trackingSteps: data.trackingSteps,
+              estimatedDeliveryTime: data.estimatedDeliveryTime,
+              deliveryPersonName: data.deliveryPersonName,
+              deliveryPersonPhone: data.deliveryPersonPhone
+            };
+            console.log('🔄 Updated order data:', newData);
+            return newData;
+          });
+          
+          // Force a re-fetch to ensure we have the latest data
+          setTimeout(() => {
+            console.log('🔄 Fetching fresh order data after socket update');
+            fetchOrderDetails();
+          }, 1000);
+        } else {
+          console.log('❌ OrderId does not match, ignoring update');
         }
       });
 

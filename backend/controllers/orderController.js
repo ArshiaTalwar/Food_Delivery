@@ -261,13 +261,16 @@ const updateStatus = async (req, res) => {
       };
       
       console.log("📡 Emitting orderStatusUpdate to user:", order.userId);
+      console.log("🏠 Available rooms:", io.sockets.adapter.rooms);
       console.log("📋 Socket data tracking steps:", socketData.trackingSteps.map(step => ({
         step: step.step,
         completed: step.completed,
         timestamp: step.timestamp
       })));
       
+      // Emit to the user's room
       io.to(order.userId).emit('orderStatusUpdate', socketData);
+      console.log("✅ Socket emission completed");
 
 
       res.json({ success: true, message: "Status Updated Successfully" });
@@ -345,6 +348,15 @@ const updateTrackingSteps = async (orderId, status, deliveryPersonName = null, d
   
   const updatedOrder = await orderModel.findByIdAndUpdate(orderId, updateData, { new: true });
   console.log("✅ Order tracking steps updated in database");
+  
+  // Verify the update by fetching fresh data
+  const verifyOrder = await orderModel.findById(orderId);
+  console.log("🔍 Database verification - tracking steps after save:", verifyOrder.trackingSteps.map(step => ({
+    step: step.step,
+    completed: step.completed,
+    timestamp: step.timestamp
+  })));
+  
   return updatedOrder;
 };
 

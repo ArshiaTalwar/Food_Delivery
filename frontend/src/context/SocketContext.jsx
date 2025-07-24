@@ -26,7 +26,10 @@ export const SocketProvider = ({ children }) => {
         if (userData) {
           // Extract user ID from token (you might need to decode JWT)
           const userId = JSON.parse(atob(userData.split('.')[1])).id;
+          console.log('🏠 Joining room with userId:', userId);
           socketInstance.emit('join', userId);
+        } else {
+          console.log('❌ No token found, cannot join user room');
         }
       });
 
