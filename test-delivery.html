@@ -83,6 +83,7 @@
     <button onclick="testDeliveryUpdate()">Test Direct Update</button>
     <button onclick="getOrders()">Get Orders List</button>
     <button onclick="getOrderDetails()">Get Order Details</button>
+    <button onclick="fixTimestamps()">Fix Order Timestamps</button>
     
     <div id="result"></div>
 
@@ -193,6 +194,31 @@
                 } else {
                     showResult(data, true);
                 }
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function fixTimestamps() {
+            const token = document.getElementById('adminToken').value;
+            
+            if (!token) {
+                showResult({ error: 'Please provide admin token' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/fix-timestamps`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': token
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                showResult(data, !data.success);
             } catch (error) {
                 showResult({ error: error.message }, true);
             }
