@@ -8,6 +8,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const placeOrder = async (req, res) => {
   const frontend_url = "http://localhost:3000";
   try {
+    // Validate required fields
+    if (!req.body.userId || !req.body.items || !req.body.amount || !req.body.address) {
+      return res.json({ 
+        success: false, 
+        message: "Missing required fields",
+        missing: {
+          userId: !req.body.userId,
+          items: !req.body.items,
+          amount: !req.body.amount,
+          address: !req.body.address
+        }
+      });
+    }
 
     const orderTime = new Date();
     console.log("🕒 Order placed at server time:", orderTime.toLocaleString());
@@ -56,10 +69,6 @@ const placeOrder = async (req, res) => {
       }
     ];
 
-     estimatedTime = new Date();
-    estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
-
-    
     const newOrder = new orderModel({
       userId: req.body.userId,
       items: req.body.items,
@@ -69,7 +78,25 @@ const placeOrder = async (req, res) => {
       estimatedDeliveryTime: estimatedTime,
       trackingSteps: trackingSteps, // Use custom tracking steps with correct timestamp
     });
-    await newOrder.save();
+    
+    console.log("💾 Attempting to save order to database...");
+    console.log("📋 Order data to save:", {
+      userId: req.body.userId,
+      itemsCount: req.body.items?.length,
+      amount: req.body.amount,
+      address: req.body.address ? "✓" : "✗",
+      estimatedDeliveryTime: estimatedTime
+    });
+    
+    const savedOrder = await newOrder.save();
+    console.log("✅ Order saved successfully with ID:", savedOrder._id);
+    
+    // Verify order was actually saved to database
+    const verifyOrder = await orderModel.findById(savedOrder._id);
+    if (!verifyOrder) {
+      throw new Error("Order failed to save to database");
+    }
+    console.log("🔍 Order verified in database");
     
     // Force update the "Order Placed" timestamp after save
     await orderModel.findByIdAndUpdate(newOrder._id, {
@@ -121,8 +148,13 @@ const placeOrder = async (req, res) => {
 
     res.json({ success: true, session_url: session.url });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Error" });
+    console.error("❌ Error in placeOrder:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.json({ success: false, message: "Failed to place order", error: error.message });
   }
 };
 
