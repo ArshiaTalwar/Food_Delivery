@@ -12,6 +12,40 @@ orderRouter.post("/userorders",authMiddleware,userOrders);
 orderRouter.get("/list",authMiddleware,listOrders);
 orderRouter.get("/track/:orderId",authMiddleware,getOrderTracking);
 
+// Migration route to fix existing order timestamps
+orderRouter.post("/fix-timestamps", authMiddleware, async (req, res) => {
+  try {
+    const orders = await orderModel.find({});
+    let fixedCount = 0;
+    
+    for (const order of orders) {
+      let needsUpdate = false;
+      const trackingSteps = [...order.trackingSteps];
+      
+      for (let i = 0; i < trackingSteps.length; i++) {
+        if (trackingSteps[i].timestamp && typeof trackingSteps[i].timestamp === 'number') {
+          trackingSteps[i].timestamp = new Date(trackingSteps[i].timestamp);
+          needsUpdate = true;
+        }
+      }
+      
+      if (needsUpdate) {
+        await orderModel.findByIdAndUpdate(order._id, { trackingSteps });
+        fixedCount++;
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Fixed timestamps for ${fixedCount} orders`,
+      totalOrders: orders.length 
+    });
+  } catch (error) {
+    console.error("Timestamp fix failed:", error);
+    res.json({ success: false, message: "Fix failed", error: error.message });
+  }
+});
+
 // Test route for debugging delivery updates
 orderRouter.post("/test-delivery", authMiddleware, async (req, res) => {
   try {
