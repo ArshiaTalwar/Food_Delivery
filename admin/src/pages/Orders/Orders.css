@@ -104,6 +104,7 @@
 
 .delivery-input:focus {
     border-color: #667eea;
+
 }
 
 .order-date, .estimated-delivery, .delivery-person {
@@ -162,6 +163,24 @@
 .cancel-delivery-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+
+}
+
+.order-date, .estimated-delivery, .delivery-person {
+    margin: 5px 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.estimated-delivery {
+    color: #11998e;
+    font-weight: 600;
+}
+
+.delivery-person {
+    color: #667eea;
+    font-weight: 600;
+
 }
 @keyframes pulse {
     0% {

@@ -31,6 +31,7 @@ const Orders = ({ url }) => {
   const statusHandler = async (event, orderId) => {
     const newStatus = event.target.value;
 
+
     // If changing to "Out for delivery" and no delivery person assigned, prompt for assignment
     if (newStatus === "Out for delivery" && selectedOrderId !== orderId) {
       setSelectedOrderId(orderId);
@@ -38,10 +39,13 @@ const Orders = ({ url }) => {
       return;
     }
 
+
+
     const requestData = {
       orderId,
       status: newStatus,
     };
+
 
     // Add delivery person details if status is "Out for delivery" and delivery person is assigned
     if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
@@ -51,6 +55,12 @@ const Orders = ({ url }) => {
       }
       requestData.deliveryPersonName = deliveryPersonName;
       requestData.deliveryPersonPhone = deliveryPersonPhone;
+
+    // Add delivery person details if status is "Out for delivery"
+    if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
+      if (deliveryPersonName) requestData.deliveryPersonName = deliveryPersonName;
+      if (deliveryPersonPhone) requestData.deliveryPersonPhone = deliveryPersonPhone;
+
     }
 
     const response = await axios.post(
@@ -129,6 +139,7 @@ const Orders = ({ url }) => {
       toast.error(response.data.message);
     }
   };
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
@@ -227,6 +238,7 @@ const Orders = ({ url }) => {
                     onChange={(e) => setDeliveryPersonPhone(e.target.value)}
                     className="delivery-input"
                   />
+
                   <div className="delivery-form-buttons">
                     <button 
                       onClick={() => handleAssignDelivery(order._id)}
@@ -241,6 +253,7 @@ const Orders = ({ url }) => {
                       Cancel
                     </button>
                   </div>
+
                 </div>
               )}
             </div>
