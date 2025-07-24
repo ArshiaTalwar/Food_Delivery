@@ -30,15 +30,37 @@ const Orders = ({ url }) => {
 
   const statusHandler = async (event, orderId) => {
     const newStatus = event.target.value;
+
+
+    // If changing to "Out for delivery" and no delivery person assigned, prompt for assignment
+    if (newStatus === "Out for delivery" && selectedOrderId !== orderId) {
+      setSelectedOrderId(orderId);
+      toast.info("Please assign a delivery person first");
+      return;
+    }
+
+
+
     const requestData = {
       orderId,
       status: newStatus,
     };
 
+
+    // Add delivery person details if status is "Out for delivery" and delivery person is assigned
+    if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
+      if (!deliveryPersonName || !deliveryPersonPhone) {
+        toast.error("Please enter delivery person name and phone number");
+        return;
+      }
+      requestData.deliveryPersonName = deliveryPersonName;
+      requestData.deliveryPersonPhone = deliveryPersonPhone;
+
     // Add delivery person details if status is "Out for delivery"
     if (newStatus === "Out for delivery" && selectedOrderId === orderId) {
       if (deliveryPersonName) requestData.deliveryPersonName = deliveryPersonName;
       if (deliveryPersonPhone) requestData.deliveryPersonPhone = deliveryPersonPhone;
+
     }
 
     const response = await axios.post(
@@ -82,6 +104,42 @@ const Orders = ({ url }) => {
   const handleDeliveryAssignment = (orderId) => {
     setSelectedOrderId(orderId);
   };
+
+  const handleAssignDelivery = async (orderId) => {
+    if (!deliveryPersonName || !deliveryPersonPhone) {
+      toast.error("Please enter both delivery person name and phone number");
+      return;
+    }
+
+    const requestData = {
+      orderId,
+      status: "Out for delivery",
+      deliveryPersonName,
+      deliveryPersonPhone,
+    };
+
+    console.log("Sending delivery assignment data:", requestData);
+
+    const response = await axios.post(
+      url + "/api/order/status",
+      requestData,
+      { headers: { token } }
+    );
+    
+    console.log("Response from server:", response.data);
+    
+    if (response.data.success) {
+      toast.success("Delivery person assigned and status updated successfully!");
+      await fetchAllOrder();
+      // Reset delivery person fields
+      setDeliveryPersonName('');
+      setDeliveryPersonPhone('');
+      setSelectedOrderId(null);
+    } else {
+      toast.error(response.data.message);
+    }
+  };
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
@@ -180,6 +238,22 @@ const Orders = ({ url }) => {
                     onChange={(e) => setDeliveryPersonPhone(e.target.value)}
                     className="delivery-input"
                   />
+
+                  <div className="delivery-form-buttons">
+                    <button 
+                      onClick={() => handleAssignDelivery(order._id)}
+                      className="confirm-delivery-btn"
+                    >
+                      Assign & Set Out for Delivery
+                    </button>
+                    <button 
+                      onClick={() => setSelectedOrderId(null)}
+                      className="cancel-delivery-btn"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
                 </div>
               )}
             </div>

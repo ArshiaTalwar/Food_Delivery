@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Delivery Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Delivery Person Update</h1>
+    
+    <div class="form-group">
+        <label for="adminToken">Admin Token:</label>
+        <input type="text" id="adminToken" placeholder="Paste your admin JWT token here">
+        <small>Get this from localStorage in your admin panel (F12 → Application → Local Storage → token)</small>
+    </div>
+    
+    <div class="form-group">
+        <label for="orderId">Order ID:</label>
+        <input type="text" id="orderId" placeholder="Enter order ID to test">
+        <small>Get this from your admin panel orders list</small>
+    </div>
+    
+    <div class="form-group">
+        <label for="deliveryName">Delivery Person Name:</label>
+        <input type="text" id="deliveryName" value="Test Delivery Person">
+    </div>
+    
+    <div class="form-group">
+        <label for="deliveryPhone">Delivery Person Phone:</label>
+        <input type="text" id="deliveryPhone" value="+1-555-TEST">
+    </div>
+    
+    <button onclick="testDeliveryUpdate()">Test Direct Update</button>
+    <button onclick="getOrders()">Get Orders List</button>
+    <button onclick="getOrderDetails()">Get Order Details</button>
+    <button onclick="fixTimestamps()">Fix Order Timestamps</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'http://localhost:4000/api/order';
+        
+        function showResult(data, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+        }
+        
+        async function testDeliveryUpdate() {
+            const token = document.getElementById('adminToken').value;
+            const orderId = document.getElementById('orderId').value;
+            const deliveryPersonName = document.getElementById('deliveryName').value;
+            const deliveryPersonPhone = document.getElementById('deliveryPhone').value;
+            
+            if (!token || !orderId) {
+                showResult({ error: 'Please provide admin token and order ID' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/test-delivery`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': token
+                    },
+                    body: JSON.stringify({
+                        orderId,
+                        deliveryPersonName,
+                        deliveryPersonPhone
+                    })
+                });
+                
+                const data = await response.json();
+                showResult(data, !data.success);
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function getOrders() {
+            const token = document.getElementById('adminToken').value;
+            
+            if (!token) {
+                showResult({ error: 'Please provide admin token' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/list`, {
+                    method: 'GET',
+                    headers: {
+                        'token': token
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success && data.data.length > 0) {
+                    // Show first few orders with their IDs
+                    const orderList = data.data.slice(0, 3).map(order => ({
+                        id: order._id,
+                        status: order.status,
+                        deliveryPersonName: order.deliveryPersonName,
+                        deliveryPersonPhone: order.deliveryPersonPhone,
+                        amount: order.amount
+                    }));
+                    showResult({ message: 'Recent orders:', orders: orderList });
+                } else {
+                    showResult(data, !data.success);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function getOrderDetails() {
+            const token = document.getElementById('adminToken').value;
+            const orderId = document.getElementById('orderId').value;
+            
+            if (!token || !orderId) {
+                showResult({ error: 'Please provide admin token and order ID' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/track/${orderId}`, {
+                    method: 'GET',
+                    headers: {
+                        'token': token
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const orderDetails = {
+                        id: data.data._id,
+                        status: data.data.status,
+                        deliveryPersonName: data.data.deliveryPersonName,
+                        deliveryPersonPhone: data.data.deliveryPersonPhone,
+                        amount: data.data.amount,
+                        date: data.data.date
+                    };
+                    showResult({ message: 'Order details:', order: orderDetails });
+                } else {
+                    showResult(data, true);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function fixTimestamps() {
+            const token = document.getElementById('adminToken').value;
+            
+            if (!token) {
+                showResult({ error: 'Please provide admin token' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/fix-timestamps`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': token
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                showResult(data, !data.success);
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>
