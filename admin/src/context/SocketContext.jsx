@@ -23,6 +23,7 @@ export const SocketProvider = ({ children }) => {
         console.log('Admin connected to server');
         
         // Join admin room for admin-specific notifications
+        console.log('🏠 Admin joining admin room...');
         socketInstance.emit('joinAdmin');
       });
 
@@ -33,6 +34,7 @@ export const SocketProvider = ({ children }) => {
 
       // Listen for new orders
       socketInstance.on('newOrder', (data) => {
+        console.log('📨 Admin received newOrder event:', data);
         toast.info(`New order received from ${data.address.firstName} ${data.address.lastName}`);
         setNewOrdersCount(prev => prev + 1);
         
