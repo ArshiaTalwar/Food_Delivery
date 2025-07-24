@@ -56,22 +56,14 @@ const placeOrder = async (req, res) => {
       }
     ];
 
-    const estimatedTime = new Date();
-    estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
-
-    
     const newOrder = new orderModel({
       userId: req.body.userId,
       items: req.body.items,
       amount: req.body.amount,
       address: req.body.address,
-
       date: orderTime, // Use the same timestamp
       estimatedDeliveryTime: estimatedTime,
       trackingSteps: trackingSteps, // Use custom tracking steps with correct timestamp
-
-      estimatedDeliveryTime: estimatedTime,
-
     });
     await newOrder.save();
     
@@ -219,25 +211,6 @@ const updateStatus = async (req, res) => {
         deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
         status: updatedOrder.status
       }); // Debug log
-      
-      // Emit real-time update to the user
-      const io = req.app.get('io');
-      io.to(order.userId).emit('orderStatusUpdate', {
-        orderId: req.body.orderId,
-
-      // Update the order status
-      await orderModel.findByIdAndUpdate(req.body.orderId, {
-
-        status: req.body.status,
-        trackingSteps: updatedOrder.trackingSteps,
-        estimatedDeliveryTime: updatedOrder.estimatedDeliveryTime,
-        deliveryPersonName: updatedOrder.deliveryPersonName,
-        deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
-        timestamp: new Date()
-      });
-
-      // Update tracking steps based on status
-      const updatedOrder = await updateTrackingSteps(req.body.orderId, req.body.status, req.body.deliveryPersonName, req.body.deliveryPersonPhone);
       
       // Emit real-time update to the user
       const io = req.app.get('io');
