@@ -11,16 +11,58 @@ const placeOrder = async (req, res) => {
     const orderTime = new Date();
     console.log("🕒 Order placed at server time:", orderTime.toLocaleString());
     
-    const estimatedTime = new Date();
+    const estimatedTime = new Date(orderTime);
     estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
     console.log("🚚 ETA set to:", estimatedTime.toLocaleString());
+    
+    // Create tracking steps with the exact order time
+    const trackingSteps = [
+      {
+        step: "Order Placed",
+        completed: true,
+        timestamp: orderTime,
+        description: "Your order has been successfully placed"
+      },
+      {
+        step: "Order Confirmed",
+        completed: false,
+        timestamp: null,
+        description: "Restaurant has confirmed your order"
+      },
+      {
+        step: "Preparing",
+        completed: false,
+        timestamp: null,
+        description: "Your food is being prepared"
+      },
+      {
+        step: "Ready for Pickup",
+        completed: false,
+        timestamp: null,
+        description: "Your order is ready and packed"
+      },
+      {
+        step: "Out for Delivery",
+        completed: false,
+        timestamp: null,
+        description: "Your order is on the way"
+      },
+      {
+        step: "Delivered",
+        completed: false,
+        timestamp: null,
+        description: "Order delivered successfully"
+      }
+    ];
     
     const newOrder = new orderModel({
       userId: req.body.userId,
       items: req.body.items,
       amount: req.body.amount,
       address: req.body.address,
+      date: orderTime, // Use the same timestamp
       estimatedDeliveryTime: estimatedTime,
+      trackingSteps: trackingSteps, // Use custom tracking steps with correct timestamp
     });
     await newOrder.save();
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
