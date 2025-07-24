@@ -12,7 +12,7 @@ const placeOrder = async (req, res) => {
     console.log("🕒 Order placed at server time:", orderTime.toLocaleString());
     
     const estimatedTime = new Date();
-    estimatedTime.setMinutes(estimatedTime.getMinutes() + 25); // 25 minutes estimated delivery
+    estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
     console.log("🚚 ETA set to:", estimatedTime.toLocaleString());
     
     const newOrder = new orderModel({
