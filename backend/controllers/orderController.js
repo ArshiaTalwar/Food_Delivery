@@ -108,6 +108,10 @@ const placeOrder = async (req, res) => {
     
     // Emit new order event to admin
     const io = req.app.get('io');
+    console.log("📡 Emitting newOrder to admin room");
+    console.log("🏠 Available rooms:", Array.from(io.sockets.adapter.rooms.keys()));
+    console.log("👥 Admin room members:", io.sockets.adapter.rooms.get('admin')?.size || 0);
+    
     io.to('admin').emit('newOrder', {
       orderId: newOrder._id,
       userId: req.body.userId,
@@ -116,6 +120,7 @@ const placeOrder = async (req, res) => {
       address: req.body.address,
       timestamp: new Date()
     });
+    console.log("✅ newOrder emission completed");
 
     const line_items = req.body.items.map((item) => ({
       price_data: {

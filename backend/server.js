@@ -62,7 +62,8 @@ io.on('connection', (socket) => {
   // Join admin room for admin notifications
   socket.on('joinAdmin', () => {
     socket.join('admin');
-    console.log('Admin joined admin room');
+    console.log('🏠 Admin joined admin room, socket ID:', socket.id);
+    console.log('👥 Total admins in room:', io.sockets.adapter.rooms.get('admin')?.size || 0);
   });
   
   socket.on('disconnect', () => {
