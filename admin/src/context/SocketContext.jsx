@@ -37,9 +37,9 @@ export const SocketProvider = ({ children }) => {
         setNewOrdersCount(prev => prev + 1);
         
         // Play notification sound (optional)
-        const audio = new Audio('/notification.mp3');
-        audio.catch(() => {}); // Ignore if audio file doesn't exist
-      });
+      //   const audio = new Audio('/notification.mp3');
+      //   audio.catch(() => {}); // Ignore if audio file doesn't exist
+       });
 
       setSocket(socketInstance);
 
