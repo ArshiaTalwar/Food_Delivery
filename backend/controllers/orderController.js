@@ -8,17 +8,79 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const placeOrder = async (req, res) => {
   const frontend_url = "http://localhost:3000";
   try {
+
+    const orderTime = new Date();
+    console.log("🕒 Order placed at server time:", orderTime.toLocaleString());
+    
+    const estimatedTime = new Date(orderTime);
+    estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
+    console.log("🚚 ETA set to:", estimatedTime.toLocaleString());
+    
+    // Create tracking steps with the exact order time
+    const trackingSteps = [
+      {
+        step: "Order Placed",
+        completed: true,
+        timestamp: orderTime,
+        description: "Your order has been successfully placed"
+      },
+      {
+        step: "Order Confirmed",
+        completed: false,
+        timestamp: null,
+        description: "Restaurant has confirmed your order"
+      },
+      {
+        step: "Preparing",
+        completed: false,
+        timestamp: null,
+        description: "Your food is being prepared"
+      },
+      {
+        step: "Ready for Pickup",
+        completed: false,
+        timestamp: null,
+        description: "Your order is ready and packed"
+      },
+      {
+        step: "Out for Delivery",
+        completed: false,
+        timestamp: null,
+        description: "Your order is on the way"
+      },
+      {
+        step: "Delivered",
+        completed: false,
+        timestamp: null,
+        description: "Order delivered successfully"
+      }
+    ];
+
     const estimatedTime = new Date();
     estimatedTime.setMinutes(estimatedTime.getMinutes() + 30); // 30 minutes estimated delivery
+
     
     const newOrder = new orderModel({
       userId: req.body.userId,
       items: req.body.items,
       amount: req.body.amount,
       address: req.body.address,
+
+      date: orderTime, // Use the same timestamp
       estimatedDeliveryTime: estimatedTime,
+      trackingSteps: trackingSteps, // Use custom tracking steps with correct timestamp
+
+      estimatedDeliveryTime: estimatedTime,
+
     });
     await newOrder.save();
+    
+    // Force update the "Order Placed" timestamp after save
+    await orderModel.findByIdAndUpdate(newOrder._id, {
+      'trackingSteps.0.timestamp': new Date(), // Update first step with current time
+    });
+    
+    console.log("🔄 Updated Order Placed timestamp to current time");
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
     
     // Emit new order event to admin
@@ -114,6 +176,7 @@ const listOrders = async (req, res) => {
 // api for updating status
 const updateStatus = async (req, res) => {
   try {
+    console.log("Update status request body:", req.body); // Debug log
     let userData = await userModel.findById(req.body.userId);
     if (userData && userData.role === "admin") {
       const order = await orderModel.findById(req.body.orderId);
@@ -121,9 +184,56 @@ const updateStatus = async (req, res) => {
         return res.json({ success: false, message: "Order not found" });
       }
 
+
+      // Prepare update data
+      const updateData = {
+        status: req.body.status,
+      };
+
+      // Add delivery person details if provided
+      if (req.body.deliveryPersonName) {
+        updateData.deliveryPersonName = req.body.deliveryPersonName;
+        console.log("Adding delivery person name:", req.body.deliveryPersonName);
+      }
+      if (req.body.deliveryPersonPhone) {
+        updateData.deliveryPersonPhone = req.body.deliveryPersonPhone;
+        console.log("Adding delivery person phone:", req.body.deliveryPersonPhone);
+      }
+
+      console.log("Final update data being sent to MongoDB:", updateData);
+
+      // Update the order status and delivery person info
+      const mongoUpdateResult = await orderModel.findByIdAndUpdate(req.body.orderId, updateData, { new: true });
+      console.log("MongoDB update result:", {
+        id: mongoUpdateResult._id,
+        status: mongoUpdateResult.status,
+        deliveryPersonName: mongoUpdateResult.deliveryPersonName,
+        deliveryPersonPhone: mongoUpdateResult.deliveryPersonPhone
+      });
+
+      // Update tracking steps based on status
+      const updatedOrder = await updateTrackingSteps(req.body.orderId, req.body.status, req.body.deliveryPersonName, req.body.deliveryPersonPhone);
+      
+      console.log("Updated order data:", {
+        deliveryPersonName: updatedOrder.deliveryPersonName,
+        deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
+        status: updatedOrder.status
+      }); // Debug log
+      
+      // Emit real-time update to the user
+      const io = req.app.get('io');
+      io.to(order.userId).emit('orderStatusUpdate', {
+        orderId: req.body.orderId,
+
       // Update the order status
       await orderModel.findByIdAndUpdate(req.body.orderId, {
+
         status: req.body.status,
+        trackingSteps: updatedOrder.trackingSteps,
+        estimatedDeliveryTime: updatedOrder.estimatedDeliveryTime,
+        deliveryPersonName: updatedOrder.deliveryPersonName,
+        deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
+        timestamp: new Date()
       });
 
       // Update tracking steps based on status
@@ -140,6 +250,7 @@ const updateStatus = async (req, res) => {
         deliveryPersonPhone: updatedOrder.deliveryPersonPhone,
         timestamp: new Date()
       });
+
 
       res.json({ success: true, message: "Status Updated Successfully" });
     }else{
