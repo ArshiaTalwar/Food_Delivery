@@ -104,9 +104,7 @@ const OrderTracking = ({ orderId, onClose }) => {
         <div className="tracking-header">
           <h2>Order Tracking</h2>
           <div>
-            <button onClick={fetchOrderDetails} className="refresh-btn" style={{marginRight: '10px'}}>
-              🔄 Refresh
-            </button>
+            
             <button onClick={onClose} className="close-btn">×</button>
           </div>
         </div>
