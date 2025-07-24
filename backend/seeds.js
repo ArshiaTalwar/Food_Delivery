@@ -226,7 +226,7 @@ const seedFoods = [
       
 
 async function seed() {
-  await mongoose.connect("mongodb+srv://Arshia:Zwiggy@cluster0.aiemvo9.mongodb.net/food-del");
+  await mongoose.connect("mongodb+srv://Arshia:Zwiggy@cluster0.aiemvo9.mongodb.net/zwiggy");
   await FoodModel.deleteMany({});
   await FoodModel.insertMany(seedFoods);
   console.log("Seeded foods!");
