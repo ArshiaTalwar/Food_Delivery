@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "zwiggy-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Zwiggy Food Delivery Backend API",
   "main": "server.js",
   "type": "module",
   "scripts": {

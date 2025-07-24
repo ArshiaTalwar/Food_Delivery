@@ -79,7 +79,9 @@ const Orders = ({ url }) => {
 
   useEffect(() => {
     if (socket) {
+      console.log('📡 Orders component setting up newOrder listener');
       socket.on('newOrder', (data) => {
+        console.log('📨 Orders component received newOrder:', data);
         // Refresh orders list when new order arrives
         fetchAllOrder();
       });
