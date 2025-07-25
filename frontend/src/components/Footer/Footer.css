@@ -9,6 +9,10 @@
   padding-top: 80px;
   margin-top: 100px;
 }
+.footer-content-left img {
+    width: 150px; /* Adjust this value as needed. Try 100px, 120px, etc. */
+    height: auto; /* This is crucial to maintain aspect ratio */
+}
 .footer-content {
   width: 100%;
   display: grid;
