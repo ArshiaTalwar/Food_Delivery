@@ -14,7 +14,9 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
+    origin: process.env.NODE_ENV === 'production' 
+      ? process.env.FRONTEND_URL || ["http://localhost", "https://your-domain.com"]
+      : ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -33,7 +35,12 @@ const port =process.env.PORT || 4000;
 
 //middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || ["http://localhost", "https://your-domain.com"]
+    : ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
+  credentials: true
+}));
 
 // DB connection
 connectDB();

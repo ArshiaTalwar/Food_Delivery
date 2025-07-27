@@ -1,0 +1,44 @@
+services:
+  # Backend Service
+  - type: web
+    name: zwiggy-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URL
+        fromDatabase:
+          name: zwiggy-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SALT
+        value: 12
+
+  # Frontend Service  
+  - type: web
+    name: zwiggy-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: redirect
+        source: /api/*
+        destination: https://zwiggy-backend.onrender.com/api/*
+      - type: redirect
+        source: /uploads/*
+        destination: https://zwiggy-backend.onrender.com/uploads/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: zwiggy-db
+    databaseName: zwiggy
+    user: zwiggy_user

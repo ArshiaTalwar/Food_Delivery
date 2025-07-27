@@ -1,5 +1,35 @@
 {
+  "name": "zwiggy-full-stack",
+  "version": "1.0.0",
+  "description": "Zwiggy Food Delivery Platform - MERN Stack",
+  "main": "backend/server.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run server",
+    "client": "cd frontend && npm run dev",
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm install && node server.js",
+    "install-deps": "cd backend && npm install && cd ../frontend && npm install",
+    "heroku-postbuild": "npm run install-deps && npm run build"
+  },
+  "keywords": [
+    "food-delivery",
+    "mern-stack",
+    "react",
+    "nodejs",
+    "mongodb",
+    "express"
+  ],
+  "author": "Zwiggy Team",
+  "license": "MIT",
   "dependencies": {
     "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
   }
 }
