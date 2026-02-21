@@ -1,0 +1,6 @@
+
+git rm --cached .env
+.env
+.env.*
+frontend/.env
+backend/.env
