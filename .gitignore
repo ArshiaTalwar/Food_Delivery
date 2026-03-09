@@ -4,3 +4,5 @@ git rm --cached .env
 .env.*
 frontend/.env
 backend/.env
+backend/.adminseed.js
+backend/.resetAdmin.js
